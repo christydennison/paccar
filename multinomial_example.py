@@ -12,13 +12,13 @@ start_probability = np.array([0.6, 0.3, 0.1])
 
 transition_probability = np.array([
   [0.6, 0.3, 0,1],
-  [0.3, 0.4, 0.3]
+  [0.3, 0.4, 0.3],
   [0, 0, 1]
 ])
 
 emission_probability = np.array([
   [0.8, 0.2],
-  [0.5, 0.5]
+  [0.5, 0.5],
   [0.1, 0.9]
 ])
 
