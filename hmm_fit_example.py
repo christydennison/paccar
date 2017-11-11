@@ -10,7 +10,7 @@ lengths = [len(X1), len(X2)]
 
 num_states = 3
 # HMM model with Gaussian emissions
-model = hmm.GaussianHMM(n_components=num_states, covariance_type="full", n_iter=1000)
+model = hmm.GaussianHMM(n_components=num_states, covariance_type="diag", n_iter=1000)
 model.fit(X, lengths)
 
 
