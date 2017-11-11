@@ -28,7 +28,7 @@ model.transmat_=transition_probability
 model.emissionprob_=emission_probability
 
 # predict a sequence of hidden states based on visible states
-conditions = [0, 1, 1, 1, 1, 1]
+conditions = np.array([0, 1, 1, 1, 1, 1]).T
 model = model.fit(conditions)
 logprob, results = model.decode(conditions, algorithm="viterbi")
 print "conditions:", ", ".join(map(lambda x: observations[x], conditions))
