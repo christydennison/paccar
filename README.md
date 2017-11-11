@@ -4,4 +4,4 @@
 
 [Hidden Markov Models Wiki](https://en.wikipedia.org/wiki/Hidden_Markov_model)
 
-[CS 229 Project on HMM](http://cs229.stanford.edu/section/cs229-hmm.pdf)
+[CS 229 Notes on HMM](http://cs229.stanford.edu/section/cs229-hmm.pdf)
