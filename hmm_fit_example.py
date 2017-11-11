@@ -17,5 +17,5 @@ model.fit(X, lengths)
 print(model.transmat_)
 
 
-print(mode.predict(X,lengths))
+print(model.predict(X,lengths))
 
