@@ -11,56 +11,28 @@ Repair slices map format:
 
     {
         veh_id0: {
-            repair_type0: [
-                {
-                    0: [snapshot0, snapshot1, ...],
-                    1: [snapshot4, snapshot5, ...],
-                    2: [snapshot6, snapshot7, ...]
-                },
-                {
-                    0: [snapshot10, snapshot11, ...],
-                    1: [snapshot14, snapshot15, ...],
-                    2: [snapshot16, snapshot17, ...]
-                }
-            ],
-            repair_type1: [
-                {
-                    0: [snapshot2, snapshot3, ...],
-                    1: [snapshot4, snapshot5, ...],
-                    2: [snapshot6, snapshot7, ...]
-                },
-                {
-                    0: [snapshot10, snapshot11, ...],
-                    1: [snapshot14, snapshot15, ...],
-                    2: [snapshot16, snapshot17, ...]
-                }
-            ]
+            repair_type0: {
+                0: [[snapshot0, snapshot1, ...], [snapshot10, snapshot11, ...]],
+                1: [[snapshot4, snapshot5, ...], [snapshot14, snapshot15, ...]],
+                2: [[snapshot6, snapshot7, ...], [snapshot16, snapshot17, ...]]
+            },
+            repair_type1: {
+                0: [[snapshot2, snapshot3, ...], [snapshot10, snapshot11, ...]],
+                1: [[snapshot4, snapshot5, ...], [snapshot14, snapshot15, ...]],
+                2: [[snapshot6, snapshot7, ...], [snapshot16, snapshot17, ...]]
+            }
         },
 
         veh_id1: {
-            repair_type0: [
-                {
-                    0: [snapshot0, snapshot1, ...],
-                    1: [snapshot4, snapshot5, ...],
-                    2: [snapshot6, snapshot7, ...]
-                },
-                {
-                    0: [snapshot10, snapshot11, ...],
-                    1: [snapshot14, snapshot15, ...],
-                    2: [snapshot16, snapshot17, ...]
-                }
-            ],
-            repair_type1: [
-                {
-                    0: [snapshot2, snapshot3, ...],
-                    1: [snapshot4, snapshot5, ...],
-                    2: [snapshot6, snapshot7, ...]
-                },
-                {
-                    0: [snapshot10, snapshot11, ...],
-                    1: [snapshot14, snapshot15, ...],
-                    2: [snapshot16, snapshot17, ...]
-                }
-            ]
+            repair_type0: {
+                0: [[snapshot0, snapshot1, ...], [snapshot10, snapshot11, ...]],
+                1: [[snapshot4, snapshot5, ...], [snapshot14, snapshot15, ...]],
+                2: [[snapshot6, snapshot7, ...], [snapshot16, snapshot17, ...]]
+            },
+            repair_type1: {
+                0: [[snapshot2, snapshot3, ...], [snapshot10, snapshot11, ...]],
+                1: [[snapshot4, snapshot5, ...], [snapshot14, snapshot15, ...]],
+                2: [[snapshot6, snapshot7, ...], [snapshot16, snapshot17, ...]]
+            }
         }
     }
