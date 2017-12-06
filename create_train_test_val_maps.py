@@ -81,7 +81,7 @@ def open_map(filename):
             window = int(keys[2])
             i = int(keys[3])
             n = "{}_{}_{}_{}_.pkl".format(filename, code, window, i)            
-            repairs_map_slice = pandas.read_pickle(n).drop(['Unnamed: 0'],1)
+            repairs_map_slice = pandas.read_pickle(n)
             if code not in repairs_map:
                 repairs_map[code] = {}
             if window not in repairs_map[code]:
