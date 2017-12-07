@@ -7,13 +7,14 @@ r_veh_key = 'Chassis Reference Number'
 s_time_key = 'Event DateTime'
 r_time_key = 'Rpr_Dt'
 
-def get_slices(k, spacing, num_slices, snapshots):
+def get_slices(num_windows, window_size, snapshots, ignore_past=False):
     slices = []
-    for i in range(k):
-        start = num_slices - (i+1)*spacing
-        end = num_slices - i*spacing
+    num_snapshots = len(snapshots)
+    for i in range(num_windows):
+        start = num_snapshots - (i+1)*window_size
+        end = num_snapshots - i*window_size
         
-        if i == k-1 and num_slices - start > 0: # last iter
+        if not ignore_past and i == num_windows-1 and num_snapshots - start > 0: # last iter
             start = 0
             
         if start >=0 and end >=0:
@@ -23,7 +24,7 @@ def get_slices(k, spacing, num_slices, snapshots):
             
     return slices
 
-def get_repair_slices_map(veh_ids, snapshots, repairs, k=10, spacing=10, code='ATA9'):
+def get_repair_slices_map(veh_ids, snapshots, repairs, num_windows=10, window_size=10, code='ATA9', ignore_past=False):
     repairs = repairs.drop(['Unnamed: 0'],1)
     snapshots = snapshots.drop(['Unnamed: 0'],1)
     repair_slices = {}
@@ -51,9 +52,9 @@ def get_repair_slices_map(veh_ids, snapshots, repairs, k=10, spacing=10, code='A
             ## for each repair type, grab slices of snapshots
             for end in repair_group[r_time_key]:
                 range_mask = (v_snapshots[s_time_key] >= start) & (v_snapshots[s_time_key] <= end)
-                num_slices = len(v_snapshots[range_mask])
+                snapshot_range = v_snapshots[range_mask]
                 
-                for i,slices in get_slices(k, spacing, num_slices, v_snapshots):
+                for i,slices in get_slices(num_windows, window_size, snapshot_range, ignore_past):
                     if len(slices) > 0:
                         if i not in veh_slices_repair:
                             veh_slices_repair[i] = []
@@ -81,7 +82,7 @@ def open_map(filename):
             window = int(keys[2])
             i = int(keys[3])
             n = "{}_{}_{}_{}_.pkl".format(filename, code, window, i)            
-            repairs_map_slice = pandas.read_pickle(n).drop(['Unnamed: 0'],1)
+            repairs_map_slice = pandas.read_pickle(n)
             if code not in repairs_map:
                 repairs_map[code] = {}
             if window not in repairs_map[code]:
