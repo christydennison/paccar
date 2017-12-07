@@ -25,8 +25,8 @@ def get_slices(num_windows, window_size, snapshots, ignore_past=False):
     return slices
 
 def get_repair_slices_map(veh_ids, snapshots, repairs, num_windows=10, window_size=10, code='ATA9', ignore_past=False):
-    repairs = repairs.drop(['Unnamed: 0'],1)
-    snapshots = snapshots.drop(['Unnamed: 0'],1)
+    repairs = repairs
+    snapshots = snapshots
     repair_slices = {}
     for veh_id in veh_ids:
         v_snapshots = snapshots[snapshots[s_veh_key] == veh_id].sort_values(by=s_time_key)
