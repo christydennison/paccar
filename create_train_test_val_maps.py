@@ -38,6 +38,9 @@ def get_repair_slices_map(veh_ids, snapshots, repairs, num_windows=10, window_si
         
         if len(grouped_repairs) == 0:
             continue
+            
+        repair_slices[veh_id] = {}
+        veh_slices = repair_slices[veh_id]
 
         ## Best indicator of repair type is the ATA9 code
         ## Iterate over each repair type and append slices
@@ -45,9 +48,9 @@ def get_repair_slices_map(veh_ids, snapshots, repairs, num_windows=10, window_si
             start = start_date
 
             ## null check
-            if repair_type not in repair_slices:
-                repair_slices[repair_type] = {}
-            veh_slices_repair = repair_slices[repair_type]
+            if repair_type not in veh_slices:
+                veh_slices[repair_type] = {}
+            veh_slices_repair = veh_slices[repair_type]
             
             ## for each repair type, grab slices of snapshots
             for end in repair_group[r_time_key]:
@@ -67,26 +70,30 @@ def get_repair_slices_map(veh_ids, snapshots, repairs, num_windows=10, window_si
 
 
 def save_map(repairs_map, filename):
-    for code in repairs_map.keys():
-        for window in repairs_map[code].keys():  
-            for i in range(len(repairs_map[code][window])):
-                n = "{}_{}_{}_{}_.pkl".format(filename, code, window, i)
-                repairs_map[code][window][i].to_pickle(n)
+    for veh_id in repairs_map.keys():
+        for code in repairs_map[veh_id].keys():
+            for window in repairs_map[veh_id][code].keys():  
+                for i in range(len(repairs_map[veh_id][code][window])):
+                    n = "{}_{}_{}_{}_{}_.pkl".format(filename, veh_id, code, window, i)
+                    repairs_map[veh_id][code][window][i].to_pickle(n)
 
 def open_map(filename):
     repairs_map = {}
     for file in glob.glob("{}*".format(filename)):
         keys = file.split("_")
-        if len(keys) == 5:
-            code = int(keys[1])
-            window = int(keys[2])
-            i = int(keys[3])
-            n = "{}_{}_{}_{}_.pkl".format(filename, code, window, i)            
+        if len(keys) == 6:
+            veh_id = int(keys[1])
+            code = int(keys[2])
+            window = int(keys[3])
+            i = int(keys[4])
+            n = "{}_{}_{}_{}_{}_.pkl".format(filename, veh_id, code, window, i)            
             repairs_map_slice = pandas.read_pickle(n)
-            if code not in repairs_map:
-                repairs_map[code] = {}
-            if window not in repairs_map[code]:
-                repairs_map[code][window] = []
-            repairs_map[code][window].append(repairs_map_slice)
+            if veh_id not in repairs_map:
+                repairs_map[veh_id] = {}
+            if code not in repairs_map[veh_id]:
+                repairs_map[veh_id][code] = {}
+            if window not in repairs_map[veh_id][code]:
+                repairs_map[veh_id][code][window] = []
+            repairs_map[veh_id][code][window].append(repairs_map_slice)
 
     return repairs_map
