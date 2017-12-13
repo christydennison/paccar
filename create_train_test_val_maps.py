@@ -15,9 +15,10 @@ def get_slices(num_windows, window_size, snapshots, ignore_past=False):
         start = num_snapshots - (i+1)*window_size
         end = num_snapshots - i*window_size
         
-        if not ignore_past and i == num_windows-1 and num_snapshots - start > 0: # last iter
+        # last iter, or not enough snaps for window
+        if not ignore_past and i == num_windows-1 and num_snapshots - start > 0 or start < 0:
             start = 0
-            
+
         if start >=0 and end >=0:
             slices.append((i, snapshots[start : end]))
         else:
@@ -69,13 +70,18 @@ def get_repair_slices_map(veh_ids, snapshots, repairs, num_windows=10, window_si
 
     return repair_slices
 
-def get_ok_slices_map(veh_ids, snapshots, num_windows, window_size):
+def get_ok_slices_map(veh_ids, snapshots, num_windows, window_size, snaps_to_include=50):
     ok_map = {}
     for veh_id in veh_ids:
         ok_map[veh_id] = {0:{0:[]}}
         v_snapshots = snapshots[snapshots[s_veh_key] == veh_id].sort_values(by=s_time_key)
-        for i,slices in get_slices(num_windows, window_size, v_snapshots, True):
-            ok_map[veh_id][0][0].append(slices.drop(['Veh Ref ID','Event DateTime'],1))
+        snapshot_range = v_snapshots[0:snaps_to_include]
+        if len(snapshot_range) == 0:
+            continue
+        for i,slices in get_slices(num_windows, window_size, snapshot_range, True):
+            p_slices = slices.drop(['Veh Ref ID','Event DateTime'],1)
+            if len(p_slices) > 0:
+                ok_map[veh_id][0][0].append(p_slices)
     return ok_map
 
 def save_map(repairs_map, filename):
@@ -88,7 +94,7 @@ def save_map(repairs_map, filename):
 
 def open_map(filename):
     repairs_map = {}
-    for file in glob.glob("{}*".format(filename)):
+    for file in glob.glob("{}_*".format(filename)):
         keys = file.split("_")
         if len(keys) == 6:
             veh_id = int(keys[1])
@@ -114,7 +120,7 @@ def save_ok_map(ok_map, filename):
 
 def open_ok_map(filename):
     ok_map = {}
-    for file in glob.glob("{}*".format(filename)):
+    for file in glob.glob("{}_*".format(filename)):
         keys = file.split("_")
         if len(keys) == 5 and keys[1] == "OK":
             veh_id = int(keys[2])
@@ -125,7 +131,7 @@ def open_ok_map(filename):
 
     return ok_map
 
-def create_maps(num_windows, window_size, snapshots, ok_snapshots, ids_tuple, ids_ok_tuple, repairs_tuple):
+def create_maps(num_windows, window_size, snapshots, ok_snapshots, ids_tuple, ids_ok_tuple, repairs_tuple, ok_snaps_to_include_tuple):
     train_ids, val_ids, test_ids = ids_tuple
     train_ok_ids, val_ok_ids, test_ok_ids = ids_ok_tuple
     train_repairs, val_repairs, test_repairs = repairs_tuple
@@ -134,9 +140,10 @@ def create_maps(num_windows, window_size, snapshots, ok_snapshots, ids_tuple, id
     val_repairs_map = get_repair_slices_map(val_ids, snapshots, val_repairs, num_windows=num_windows, window_size=window_size, code=code, ignore_past=True)
     test_repairs_map = get_repair_slices_map(test_ids, snapshots, test_repairs, num_windows=num_windows, window_size=window_size, code=code, ignore_past=True)
     
-    train_ok_map = get_ok_slices_map(train_ok_ids, ok_snapshots, num_windows, window_size)
-    val_ok_map = get_ok_slices_map(val_ok_ids, ok_snapshots, num_windows, window_size)
-    test_ok_map = get_ok_slices_map(test_ok_ids, ok_snapshots, num_windows, window_size)
+    (ok_train_snaps_include, ok_val_snaps_include, ok_test_snaps_include) = ok_snaps_to_include_tuple
+    train_ok_map = get_ok_slices_map(train_ok_ids, ok_snapshots, num_windows, window_size, ok_train_snaps_include)
+    val_ok_map = get_ok_slices_map(val_ok_ids, ok_snapshots, num_windows, window_size, ok_val_snaps_include)
+    test_ok_map = get_ok_slices_map(test_ok_ids, ok_snapshots, num_windows, window_size, ok_test_snaps_include)
 
     name = "{}-{}".format(num_windows, window_size)
     
