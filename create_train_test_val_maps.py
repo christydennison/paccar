@@ -98,7 +98,7 @@ def get_slices(num_windows, window_size, snapshots, ignore_past=False, incomplet
             
     return slices
 
-def get_repair_slices_map(veh_ids, snapshots, repairs, num_windows=10, window_size=10, code='ATA9', ignore_past=False, incomplete_windows=False):
+def get_repair_slices_map(veh_ids, snapshots, repairs, num_windows=10, window_size=10, code='ATA9', ignore_past=False, incomplete_windows=False, window_len=100):
     repairs = repairs
     snapshots = snapshots
     repair_slices = {}
@@ -125,7 +125,7 @@ def get_repair_slices_map(veh_ids, snapshots, repairs, num_windows=10, window_si
                 range_mask = (v_snapshots[s_time_key] >= start) & (v_snapshots[s_time_key] <= end)
                 snapshot_range_unp = v_snapshots[range_mask]
                 if len(snapshot_range_unp) > 0:
-                    snapshot_range = smooth_data(snapshot_range_unp)
+                    snapshot_range = smooth_data(snapshot_range_unp, window_len)
                     for i,slices in get_slices(num_windows, window_size, snapshot_range, ignore_past, incomplete_windows):
                         if len(slices) > 0:
                             if i not in veh_slices_repair:
@@ -145,13 +145,13 @@ def get_repair_slices_map(veh_ids, snapshots, repairs, num_windows=10, window_si
 
     return repair_slices
 
-def get_ok_slices_map(veh_ids, snapshots, num_windows, window_size, ignore_past=False, incomplete_windows=False):
+def get_ok_slices_map(veh_ids, snapshots, num_windows, window_size, ignore_past=False, incomplete_windows=False, window_len=100):
     ok_map = {}
     for veh_id in veh_ids:
-        v_snapshots = snapshots[snapshots[s_veh_key] == veh_id].sort_values(by=s_time_key)
-        if len(v_snapshots) == 0:
+        v_snapshots_unp = snapshots[snapshots[s_veh_key] == veh_id].sort_values(by=s_time_key)
+        if len(v_snapshots_unp) == 0:
             continue
-
+        v_snapshots = smooth_data(v_snapshots_unp, window_len)
         slices_to_append = []
         all_slices = get_slices(num_windows, window_size, v_snapshots, ignore_past, incomplete_windows)
         for i,slices in all_slices:
@@ -210,18 +210,18 @@ def open_ok_map(filename):
 
     return ok_map
 
-def create_maps(num_windows, window_size, snapshots, ok_snapshots, ids_tuple, ids_ok_tuple, repairs_tuple, incomplete_windows=True):
+def create_maps(num_windows, window_size, snapshots, ok_snapshots, ids_tuple, ids_ok_tuple, repairs_tuple, incomplete_windows=True, window_len=100):
     train_ids, val_ids, test_ids = ids_tuple
     train_ok_ids, val_ok_ids, test_ok_ids = ids_ok_tuple
     train_repairs, val_repairs, test_repairs = repairs_tuple
     
-    train_repairs_map = get_repair_slices_map(train_ids, snapshots, train_repairs, num_windows=num_windows, window_size=window_size, code=code, ignore_past=True, incomplete_windows=incomplete_windows)
-    val_repairs_map = get_repair_slices_map(val_ids, snapshots, val_repairs, num_windows=num_windows, window_size=window_size, code=code, ignore_past=True, incomplete_windows=incomplete_windows)
-    test_repairs_map = get_repair_slices_map(test_ids, snapshots, test_repairs, num_windows=num_windows, window_size=window_size, code=code, ignore_past=True, incomplete_windows=incomplete_windows)
+    train_repairs_map = get_repair_slices_map(train_ids, snapshots, train_repairs, num_windows=num_windows, window_size=window_size, code=code, ignore_past=True, incomplete_windows=incomplete_windows, window_len=window_len)
+    val_repairs_map = get_repair_slices_map(val_ids, snapshots, val_repairs, num_windows=num_windows, window_size=window_size, code=code, ignore_past=True, incomplete_windows=incomplete_windows, window_len=window_len)
+    test_repairs_map = get_repair_slices_map(test_ids, snapshots, test_repairs, num_windows=num_windows, window_size=window_size, code=code, ignore_past=True, incomplete_windows=incomplete_windows, window_len=window_len)
     
-    train_ok_map = get_ok_slices_map(train_ok_ids, ok_snapshots, 1, window_size, ignore_past=True, incomplete_windows=incomplete_windows)
-    val_ok_map = get_ok_slices_map(val_ok_ids, ok_snapshots, 1, window_size, ignore_past=True, incomplete_windows=incomplete_windows)
-    test_ok_map = get_ok_slices_map(test_ok_ids, ok_snapshots, 1, window_size, ignore_past=True, incomplete_windows=incomplete_windows)
+    train_ok_map = get_ok_slices_map(train_ok_ids, ok_snapshots, 1, window_size, ignore_past=True, incomplete_windows=incomplete_windows, window_len=window_len)
+    val_ok_map = get_ok_slices_map(val_ok_ids, ok_snapshots, 1, window_size, ignore_past=True, incomplete_windows=incomplete_windows, window_len=window_len)
+    test_ok_map = get_ok_slices_map(test_ok_ids, ok_snapshots, 1, window_size, ignore_past=True, incomplete_windows=incomplete_windows, window_len=window_len)
 
     name = "{}-{}".format(num_windows, window_size)
     
