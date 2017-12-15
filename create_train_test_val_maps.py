@@ -8,6 +8,75 @@ s_time_key = 'Event DateTime'
 r_time_key = 'Rpr_Dt'
 code = 'ATA6'
 
+fields_to_smooth = ['Acc Pedal Position',
+ 'Altitude',
+ 'Ambient Air Temp',
+ 'Barometric Press',
+ 'Bus Utilization',
+ 'Cat Intake Gas Temp',
+ 'Cat Outlet Gas Temp',
+ 'Cmd Eng Fuel Press',
+ 'Drvr Demand Torque',
+ 'Eng Air Flow Rate',
+ 'Eng Avg Fuel Econ',
+ 'Eng Coolant Temp',
+ 'Eng DPF Intake Press',
+ 'Eng Demand Torque',
+ 'Eng Egr Valve Pos',
+ 'Eng Exhaust Gas Temp',
+ 'Eng Fuel Del Press',
+ 'Eng Man Abs Pressure',
+ 'Eng Oil Pressure',
+ 'Eng Percent Torque',
+ 'EngFuelTemp1',
+ 'EngInjRail1Press',
+ 'EngIntakeMan1Temp',
+ 'EngOilTemp1',
+ 'EngTurbo1Boost',
+ 'EngTurbo1Pos',
+ 'EngTurbo1Speed',
+ 'Engine Speed',
+ 'Engine Start Ambient',
+ 'Engine Start Coolant',
+ 'Event - All Lamps On Time Hr',
+ 'Event - Amber Lamp Time Hr',
+ 'Event - Mil Lamp Time Hr',
+ 'Event - Red Lamp Time Hr',
+ 'Exhaust Tank Level',
+ 'Exhaust Tank Temp',
+ 'Fan Speed',
+ 'Keyswitch Bat Pot',
+ 'Latitude',
+ 'Lifetime Distance',
+ 'Lifetime Engine Hours',
+ 'Lifetime Fuel',
+ 'Lifetime Idle Fuel',
+ 'Lifetime Idle Hours',
+ 'Longitude',
+ 'Part Trap Diff Press',
+ 'Part Trap Out Temp',
+ 'Scr Intake Gas Temp',
+ 'Scr Outlet Gas Temp',
+ 'Trip Distance',
+ 'Trip Idle Time',
+ 'Trip Run Time',
+ 'Vehicle Speed']
+
+def smooth_data(data_slice, window_len=100):
+    p_slice = pandas.DataFrame.copy(data_slice)
+    window_len = min(window_len, len(p_slice)-1)
+    if window_len <= 3:
+        return data_slice
+    for field in fields_to_smooth:
+        x = data_slice[field]
+        s=np.r_[x[window_len:0:-1],x,x[-2:-window_len:-1]]
+        w = np.hanning(window_len)
+        y = np.convolve(w/w.sum(),s,mode='valid')
+        #print(len(y), len(y[window_len-1:]))
+        #print(len(x))
+        p_slice[field] = y[window_len-1:]
+    return p_slice
+
 def get_slices(num_windows, window_size, snapshots, ignore_past=False, incomplete_windows=False):
     slices = []
     num_snapshots = len(snapshots)
@@ -20,7 +89,10 @@ def get_slices(num_windows, window_size, snapshots, ignore_past=False, incomplet
             start = 0
 
         if start >=0 and end >=0:
-            slices.append((i, snapshots[start : end]))
+            snaps = snapshots[start : end]
+            if len(snaps)==0:
+                break
+            slices.append((i, snaps))
         else:
             break
             
@@ -51,13 +123,14 @@ def get_repair_slices_map(veh_ids, snapshots, repairs, num_windows=10, window_si
             ## for each repair type, grab slices of snapshots
             for end in repair_group[r_time_key]:
                 range_mask = (v_snapshots[s_time_key] >= start) & (v_snapshots[s_time_key] <= end)
-                snapshot_range = v_snapshots[range_mask]
-
-                for i,slices in get_slices(num_windows, window_size, snapshot_range, ignore_past, incomplete_windows):
-                    if len(slices) > 0:
-                        if i not in veh_slices_repair:
-                            veh_slices_repair[i] = []
-                        veh_slices_repair[i].append(slices.drop(['Veh Ref ID','Event DateTime'],1))
+                snapshot_range_unp = v_snapshots[range_mask]
+                if len(snapshot_range_unp) > 0:
+                    snapshot_range = smooth_data(snapshot_range_unp)
+                    for i,slices in get_slices(num_windows, window_size, snapshot_range, ignore_past, incomplete_windows):
+                        if len(slices) > 0:
+                            if i not in veh_slices_repair:
+                                veh_slices_repair[i] = []
+                            veh_slices_repair[i].append(slices.drop(['Veh Ref ID','Event DateTime'],1))
 
                 ## reset start to end for next iteration
                 start = end
