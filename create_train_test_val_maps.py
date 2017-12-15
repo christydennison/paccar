@@ -125,7 +125,9 @@ def get_repair_slices_map(veh_ids, snapshots, repairs, num_windows=10, window_si
                 range_mask = (v_snapshots[s_time_key] >= start) & (v_snapshots[s_time_key] <= end)
                 snapshot_range_unp = v_snapshots[range_mask]
                 if len(snapshot_range_unp) > 0:
-                    snapshot_range = smooth_data(snapshot_range_unp, window_len)
+                    snapshot_range = snapshot_range_unp
+                    if window_len is not None:
+                        snapshot_range = smooth_data(snapshot_range_unp, window_len)
                     for i,slices in get_slices(num_windows, window_size, snapshot_range, ignore_past, incomplete_windows):
                         if len(slices) > 0:
                             if i not in veh_slices_repair:
@@ -151,7 +153,9 @@ def get_ok_slices_map(veh_ids, snapshots, num_windows, window_size, ignore_past=
         v_snapshots_unp = snapshots[snapshots[s_veh_key] == veh_id].sort_values(by=s_time_key)
         if len(v_snapshots_unp) == 0:
             continue
-        v_snapshots = smooth_data(v_snapshots_unp, window_len)
+        v_snapshots = v_snapshots_unp
+        if window_len is not None:
+            v_snapshots = smooth_data(v_snapshots_unp, window_len)
         slices_to_append = []
         all_slices = get_slices(num_windows, window_size, v_snapshots, ignore_past, incomplete_windows)
         for i,slices in all_slices:
